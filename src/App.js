@@ -1,24 +1,69 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState } from 'react'
+import Pokemon from './pokemon'
 
-function App() {
+const URL = 'https://pokeapi.co/api/v2/pokemon/'
+
+const App = () => {
+  const [pokemonTextInput, setPokemonTextInput] = useState('')
+  const [pokemon, setPokemon] = useState()
+  const [pokemonStore, setPokemonStore] = useState([])
+
+  const provider = pokemonString => `${URL}${pokemonString}`
+
+  const handlePokemonTextInput = e => {
+    setPokemonTextInput(e.target.value)
+  }
+
+  const handleSearchPokemon = async () => {
+    const response = await fetch(provider(pokemonTextInput))
+    const result = await response.json()
+    setPokemon(result)
+  }
+
+  const handleAddToStore = () => {
+    setPokemonStore(prev => [...prev, pokemon])
+  }
+
+  const handleRemoveFromStore = pokemonId => {
+    setPokemonStore(prev => prev.filter(({ id }) => id !== pokemonId))
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+    <>
+      <header>
+        <input placeholder="Pokemon" type="text" onChange={handlePokemonTextInput} />
+        <button onClick={handleSearchPokemon}>
+          Find
+        </button>
       </header>
-    </div>
+      <section>
+        {pokemon && (
+          <Pokemon
+            image={pokemon.sprites.front_default}
+            name={pokemon.name}
+            id={pokemon.id}
+            onClick={handleAddToStore}
+            disabled={pokemonStore.length >= 6}
+            btnText="Catch"
+          />
+        )}
+        <hr />
+        {pokemonStore.length === 0 ? (
+          <p>Your party is empty</p>
+        ) : (
+          pokemonStore.map(pkmn => (
+            <Pokemon
+              key={pkmn.id}
+              image={pkmn.sprites.front_default}
+              name={pkmn.name}
+              id={pkmn.id}
+              onClick={() => handleRemoveFromStore(pkmn.id)}
+              btnText="Delete"
+            />
+          ))
+        )}
+      </section>
+    </>
   );
 }
 
