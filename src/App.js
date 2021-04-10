@@ -3,6 +3,12 @@ import Pokemon from './pokemon'
 
 const URL = 'https://pokeapi.co/api/v2/pokemon/'
 
+const api = async pokemonName => {
+  const response = await fetch(`${URL}${pokemonName}`)
+  const result = await response.json()
+  return result
+}
+
 const pokemonParser = pokemon => ({
   image: pokemon.sprites.front_default,
   name: pokemon.name,
@@ -16,7 +22,6 @@ const App = () => {
   const [pokemonStore, setPokemonStore] = useState([])
   const [pokemonHistory, setPokemonHistory] = useState([])
 
-  const provider = pokemonString => `${URL}${pokemonString}`
 
   const handlePokemonTextInput = e => {
     setPokemonTextInput(e.target.value.toLowerCase())
@@ -28,8 +33,7 @@ const App = () => {
       if (history) {
         setPokemon(history)
       } else {
-        const response = await fetch(provider(pokemonTextInput))
-        const result = await response.json()
+        const result = await api(pokemonTextInput)
         const pkmn = pokemonParser(result)
         setPokemonHistory(prev => [...prev, pkmn])
         setPokemon(pkmn)
@@ -41,7 +45,8 @@ const App = () => {
   }
 
   const handleAddToStore = () => {
-    setPokemonStore(prev => [...prev, pokemon])
+    if (pokemonStore.length < 6)
+      setPokemonStore(prev => [...prev, pokemon])
   }
 
   const handleRemoveFromStore = pokemonId => {
@@ -63,9 +68,7 @@ const App = () => {
       <section>
         {pokemon && (
           <Pokemon
-            id={pokemon.id}
-            name={pokemon.name}
-            image={pokemon.image}
+            pokemon={pokemon}
             onClick={handleAddToStore}
             disabled={pokemonStore.length >= 6}
             btnText="Catch"
@@ -79,9 +82,7 @@ const App = () => {
           pokemonStore.map(pkmn => (
             <Pokemon
               id={pkmn.id}
-              key={pkmn.id}
-              name={pkmn.name}
-              image={pkmn.image}
+              pokemon={pkmn}
               onClick={() => handleRemoveFromStore(pkmn.id)}
               btnText="Delete"
             />
